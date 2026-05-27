@@ -1,6 +1,6 @@
 import yt_dlp
 import uuid
-from config import DOWNLOAD_DIR
+from qweqq_yt_downloader_bot.app.config import DOWNLOAD_DIR
 from pathlib import Path
 
 Path(DOWNLOAD_DIR).mkdir(exist_ok=True)
