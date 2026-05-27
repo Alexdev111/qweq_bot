@@ -2,9 +2,9 @@ import asyncio
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, ContextTypes, filters
 
-from qweqq_yt_downloader_bot.app.config import BOT_TOKEN
-from queue import queue
-from qweqq_yt_downloader_bot.downloader import download_video
+from config import BOT_TOKEN
+from queue import Queue
+from .downloader import download_video
 import storage
 
 

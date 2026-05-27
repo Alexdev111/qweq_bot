@@ -1,6 +1,6 @@
 import yt_dlp
 import uuid
-from qweqq_yt_downloader_bot.app.config import DOWNLOAD_DIR
+from app.config import DOWNLOAD_DIR
 from pathlib import Path
 
 Path(DOWNLOAD_DIR).mkdir(exist_ok=True)
@@ -16,14 +16,18 @@ async def download_video(job):
 
     if fmt == "mp4":
         ydl_opts = {
-            "format": f"bv*[height<={quality}]+ba/b",
-            "outtmpl": str(out_path) + ".mp4",
+    "format": "bv*+ba/best",
+    "merge_output_format": "mp4",
 
-            # SPEED BOOST
-            "concurrent_fragment_downloads": 8,
-            "noplaylist": True,
-            "quiet": True,
-        }
+    "concurrent_fragment_downloads": 4,
+    "http_chunk_size": 10 * 1024 * 1024,
+
+    "retries": 10,
+    "fragment_retries": 10,
+
+    "noplaylist": True,
+    "quiet": True,
+}
 
     else:
         ydl_opts = {
