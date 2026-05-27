@@ -2,9 +2,8 @@ import asyncio
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, ContextTypes, filters
 
-from config import BOT_TOKEN
-from queue import Queue
-from .downloader import download_video
+from app.config import BOT_TOKEN
+from downloader import download_video
 import storage
 
 
@@ -35,7 +34,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 # ---------------- FORMAT SELECT ----------------
-async def format_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def format_callback(update, context):
     query = update.callback_query
     await query.answer()
 
@@ -56,6 +55,13 @@ async def format_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 # ---------------- QUALITY SELECT ----------------
+import asyncio
+from telegram import Update
+from telegram.ext import ContextTypes
+from downloader import download_video
+import storage
+
+
 async def quality_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -67,15 +73,34 @@ async def quality_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await query.edit_message_text("Downloading...")
 
-    file_path = await download_video(job)
+    # Run blocking yt-dlp in thread
+    file_path = await asyncio.to_thread(download_video, job)
 
-    if job["format"] == "mp4":
-        await context.bot.send_video(query.message.chat.id, video=open(file_path + ".mp4", "rb"))
-    else:
-        await context.bot.send_audio(query.message.chat.id, audio=open(file_path + ".mp3", "rb"))
+    chat_id = query.message.chat.id
 
-    await query.message.reply_text("Done ✔")
+    try:
+        if job["format"] == "mp4":
+            video_path = file_path + ".mp4"
 
+            with open(video_path, "rb") as f:
+                await context.bot.send_video(
+                    chat_id=chat_id,
+                    video=f
+                )
+
+        else:
+            audio_path = file_path + ".mp3"
+
+            with open(audio_path, "rb") as f:
+                await context.bot.send_audio(
+                    chat_id=chat_id,
+                    audio=f
+                )
+
+        await query.message.reply_text("Done ✔")
+
+    except Exception as e:
+        await query.message.reply_text(f"Error: {e}")
 
 # ---------------- MAIN ----------------
 def main():
